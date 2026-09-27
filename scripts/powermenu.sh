@@ -6,7 +6,7 @@ c=$(printf '%s\n' "󰌾  Lock" "󰒲  Suspend" "󰍃  Logout" "󰜉  Reboot" "�
 case $c in
     *Lock)     hyprlock ;;
     *Suspend)  systemctl suspend ;;
-    *Logout)   hyprctl dispatch exit ;;
+    *Logout)   hyprctl dispatch "hl.dsp.exit()" ;;
     *Reboot)   systemctl reboot ;;
     *Shutdown) systemctl poweroff ;;
 esac

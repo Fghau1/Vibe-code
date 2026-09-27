@@ -10,7 +10,7 @@ sudo pacman -Syu --needed --noconfirm
 echo "==> Official repo packages"
 sudo pacman -S --needed --noconfirm \
     hyprland hyprlock hypridle hyprpolkitagent xdg-desktop-portal-hyprland \
-    kitty rofi dunst fastfetch \
+    kitty alacritty rofi dunst fastfetch fish eza bat fzf \
     nautilus firefox \
     networkmanager network-manager-applet \
     bluez bluez-utils blueman \

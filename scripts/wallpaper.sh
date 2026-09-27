@@ -1,21 +1,31 @@
 #!/usr/bin/env bash
 # Animated wallpaper picker (awww: animated transitions + GIF wallpapers)
 # usage: wallpaper.sh [--pick|--random|--restore]
-DIRS=("$HOME/10Hour/wallpapers" "$HOME/Imagens/wallpaper" "$HOME/hyprland-setup/wallpapers")
+DIRS=("$HOME/Imagens")
 STATE=~/.cache/10hour-wallpaper
 THEME="$(dirname "$(readlink -f "$0")")/../rofi/wallpaper.rasi"
 TRANS=(grow wipe wave outer center any)
 
 daemon() { pgrep -x awww-daemon >/dev/null || { setsid awww-daemon >/dev/null 2>&1 & sleep 0.6; }; }
 
+is_video() { case "$1" in *.mp4|*.MP4|*.mkv|*.MKV|*.webm|*.WEBM) return 0 ;; *) return 1 ;; esac }
+
 set_wp() {
-    daemon
-    echo "$1" > "$STATE"
-    awww img "$1" --transition-type "${TRANS[RANDOM % ${#TRANS[@]}]}" \
-        --transition-duration 1.2 --transition-fps 144 --transition-step 60
+    if is_video "$1"; then
+        pkill -x mpvpaper 2>/dev/null
+        pkill -x awww-daemon 2>/dev/null
+        echo "$1" > "$STATE"
+        mpvpaper -f -p -o "no-audio loop-playlist" ALL "$1" >/dev/null 2>&1
+    else
+        pkill -x mpvpaper 2>/dev/null
+        daemon
+        echo "$1" > "$STATE"
+        awww img "$1" --transition-type "${TRANS[RANDOM % ${#TRANS[@]}]}" \
+            --transition-duration 1.2 --transition-fps 144 --transition-step 60
+    fi
 }
 
-files() { find "${DIRS[@]}" -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.gif' -o -iname '*.webp' \) 2>/dev/null | sort; }
+files() { find "${DIRS[@]}" -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.gif' -o -iname '*.webp' -o -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.webm' \) 2>/dev/null | sort; }
 
 case ${1:---pick} in
     --restore) daemon; [[ -f $STATE ]] && set_wp "$(<"$STATE")" ;;

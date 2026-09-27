@@ -6,10 +6,12 @@ Backup of my current Arch + Hyprland desktop (Lua-based `hyprland.lua` config). 
 
 - `hypr/` — Hyprland config (`hyprland.lua`) and `hyprlock.conf`
 - `quickshell/` — top bar and control panel (QML)
-- `kitty/` — terminal config and theme
+- `kitty/` — terminal config and theme (kept for reference, no longer the default terminal)
+- `alacritty/` — terminal config and theme (current default terminal)
 - `rofi/` — launcher themes (10hour, tokyo, wallpaper picker)
 - `dunst/` — notification daemon config
 - `fastfetch/` — system info config
+- `fish/` — shell config, prompt and aliases (Adwaita Darker palette, matches kitty)
 - `scripts/` — helper scripts wired into Hyprland keybinds (powermenu, wifi/bluetooth menus, wallpaper switcher, OSD, AI-agent launcher, etc.)
 - `wallpapers/` — wallpaper thumbnail(s)
 - `install.sh` — symlinks the configs above into `~/.config`
@@ -27,7 +29,7 @@ Backup of my current Arch + Hyprland desktop (Lua-based `hyprland.lua` config). 
 
    Each script installs, per distro:
    - **Hyprland ecosystem**: `hyprland`, `hyprlock`, `hypridle`, `hyprpolkitagent`, `xdg-desktop-portal-hyprland` (Arch: official repos; Fedora: `solopasha/hyprland` COPR; Debian/Ubuntu: not packaged upstream, the script flags this so you can build from source)
-   - **Bar / launcher / notifications**: `quickshell` (Arch via AUR; Fedora/Debian: build from source, flagged by the script), `rofi`, `dunst`, `kitty`, `fastfetch`
+   - **Bar / launcher / notifications**: `quickshell` (Arch via AUR; Fedora/Debian: build from source, flagged by the script), `rofi`, `dunst`, `kitty`, `alacritty`, `fastfetch`
    - **System tools**: NetworkManager + applet, `bluez`/`blueman`, `wireplumber`, `pavucontrol`, `playerctl`, `brightnessctl`, `wl-clipboard`, `cliphist`, `grim`, `slurp`, `wf-recorder`, `jq`, `xdg-user-dirs`, `polkit`
    - **Apps**: `nautilus`, `firefox`
    - **Fonts**: JetBrainsMono Nerd Font

@@ -4,7 +4,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 
 // Painel de controlo (popup): Wi-Fi, Bluetooth, volume, brilho.
-// Abrir/fechar: ~/10Hour/scripts/controlpanel.sh (SUPER+C). Esc ou clique fora fecha.
+// Abrir/fechar: ~/.config/scripts/controlpanel.sh (SUPER+C). Esc ou clique fora fecha.
 ShellRoot {
     id: root
 
@@ -168,7 +168,7 @@ done`]
             width: 380
             height: col.implicitHeight + 32
             x: parent.width - width - 12
-            y: 44
+            y: 40
             color: "#000000"
             radius: 10
             border.width: 1; border.color: "#333333"

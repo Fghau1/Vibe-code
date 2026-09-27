@@ -13,7 +13,7 @@ sudo apt update
 
 echo "==> Installing packages available in Debian/Ubuntu repos"
 sudo apt install -y \
-    kitty rofi dunst fastfetch \
+    kitty alacritty rofi dunst fastfetch fish bat fzf \
     nautilus firefox \
     network-manager network-manager-gnome \
     bluez blueman \

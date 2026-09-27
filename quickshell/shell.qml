@@ -46,16 +46,9 @@ ShellRoot {
     readonly property bool hasBat: bat && bat.isLaptopBattery
     property int brightness: -1
 
-    // ── pill / expand state ──
-    property bool barPinned: true
-    property bool autoExpanded: false
-    readonly property bool expanded: barPinned || autoExpanded
-    Timer { id: collapseTimer; interval: 900; onTriggered: root.autoExpanded = false }
-    function peek() { root.autoExpanded = true; collapseTimer.restart() }
-
     // ── dock ──
     readonly property var pinned: [
-        { cls: "kitty",               icon: "kitty",               cmd: "kitty" },
+        { cls: "Alacritty",           icon: "Alacritty",           cmd: "alacritty" },
         { cls: "app.zen_browser.zen", icon: "app.zen_browser.zen", cmd: "flatpak run app.zen_browser.zen" },
         { cls: "firefox",             icon: "firefox",             cmd: "firefox" },
         { cls: "org.gnome.Nautilus",  icon: "org.gnome.Nautilus",  cmd: "nautilus" },
@@ -78,14 +71,23 @@ ShellRoot {
         }
         runningClasses = s
     }
-    Component.onCompleted: { Hyprland.refreshToplevels(); dockSync.restart() }
+
+    // ── workspaces: always show one more dot than the highest workspace in use (min 5) ──
+    property int wsCount: 5
+    function updateWsCount() {
+        let m = 0
+        for (const w of Hyprland.workspaces.values) if (w.id > m) m = w.id
+        root.wsCount = Math.max(5, m + 1)
+    }
+
+    Component.onCompleted: { Hyprland.refreshToplevels(); dockSync.restart(); root.updateWsCount() }
     Timer { id: dockSync; interval: 250; onTriggered: root.updateRunning() }
     Timer { id: dockRefresh; interval: 150; onTriggered: { Hyprland.refreshToplevels(); dockSync.restart() } }
     Connections {
         target: Hyprland
         function onRawEvent(ev) {
             if (ev.name === "openwindow" || ev.name === "closewindow") dockRefresh.restart()
-            if (ev.name === "workspace" || ev.name === "workspacev2") root.peek()
+            root.updateWsCount()
         }
     }
 
@@ -122,7 +124,7 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
         }
     }
     Timer { interval: 5000; running: true; repeat: true; triggeredOnStart: true; onTriggered: netGet.running = true }
-    function openControlPanel() { Quickshell.execDetached(["sh", "-c", "$HOME/10Hour/scripts/controlpanel.sh"]) }
+    function openControlPanel() { Quickshell.execDetached(["sh", "-c", "$HOME/.config/scripts/controlpanel.sh"]) }
 
     // ── battery details ──
     function batteryIcon() {
@@ -199,18 +201,13 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
         function brightness(): void { osdBright.running = true }
     }
 
-    IpcHandler {
-        target: "dock"
-        function toggle(): void { root.barPinned = !root.barPinned }
-    }
-
     Variants {
         model: Quickshell.screens
         delegate: PanelWindow {
             required property var modelData
             screen: modelData
             anchors { bottom: true }
-            margins { bottom: 80 }
+            margins { bottom: 100 }
             implicitWidth: 280
             implicitHeight: 40
             color: "transparent"
@@ -276,47 +273,62 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
 
     Variants {
         model: Quickshell.screens
-        delegate: PanelWindow {
-            id: barWin
+        delegate: Scope {
+            id: screenScope
             required property var modelData
-            screen: modelData
-            anchors { top: true; left: true; right: true }
-            margins { top: 6; left: Math.round(modelData.width * 0.25); right: Math.round(modelData.width * 0.25) }
-            implicitHeight: 34
-            color: "transparent"
 
-            // full-width hover zone: moving the cursor anywhere onto the bar row reveals it
-            MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.NoButton
-                onEntered: { root.autoExpanded = true; collapseTimer.stop() }
-                onExited: collapseTimer.restart()
+            // full-width invisible window whose only job is to reserve the top strip of
+            // screen (exclusive zone) across the whole monitor width, so tiled windows
+            // never render under the bar - the bar itself doesn't span full width.
+            PanelWindow {
+                screen: screenScope.modelData
+                anchors { top: true; left: true; right: true }
+                margins {
+                    top: 2
+                    left: Math.round(screenScope.modelData.width * 0.25)
+                    right: Math.round(screenScope.modelData.width * 0.25)
+                }
+                implicitHeight: 34
+                color: "transparent"
             }
+
+            PanelWindow {
+                id: barWin
+                exclusionMode: ExclusionMode.Ignore
+                screen: screenScope.modelData
+                anchors { top: true; left: true }
+
+                // content-driven width: enough room on each side of the clock for
+                // whichever of (workspaces+dock) / (media+tray+status) is wider,
+                // so nothing ever overlaps; clamped to the screen so it can't run off-edge.
+                readonly property real leftContentWidth: menuBtn.width + 8 + 8 + leftRow.implicitWidth
+                readonly property real rightContentWidth: rightRow.implicitWidth + 14 + 14
+                readonly property real neededWidth: 2 * Math.max(leftContentWidth, rightContentWidth) + clockItem.width + 8
+                readonly property real minWidth: 1300
+                implicitWidth: Math.min(screenScope.modelData.width - 40, Math.max(minWidth, neededWidth))
+                Behavior on implicitWidth { NumberAnimation { duration: 320; easing.type: Easing.OutExpo } }
+                margins { top: 2; left: Math.round((screenScope.modelData.width - implicitWidth) / 2) }
+
+                implicitHeight: 34
+                color: "transparent"
 
             Rectangle {
                 id: card
                 anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
                 height: parent.height
-                width: root.expanded ? parent.width : (clockTxt.implicitWidth + 40)
+                width: parent.width
                 clip: true
                 color: root.barBg
-                radius: root.expanded ? 8 : height / 2
+                radius: 8
                 border.width: 1
                 border.color: root.barBorder
-                Behavior on width { NumberAnimation { duration: 320; easing.type: Easing.OutExpo } }
-                Behavior on radius { NumberAnimation { duration: 320; easing.type: Easing.OutExpo } }
 
                 // left: menu button (circle) + workspaces + dock
                 Item {
                     id: menuBtn
                     anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
                     width: 22; height: 22
-                    opacity: root.expanded ? 1 : 0
-                    visible: opacity > 0.01
-                    enabled: root.expanded
-                    Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
                     Rectangle {
                         anchors.centerIn: parent
                         width: mbArea.containsMouse ? 14 : 12
@@ -341,10 +353,6 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
                     id: leftRow
                     anchors { left: menuBtn.right; leftMargin: 8; verticalCenter: parent.verticalCenter }
                     spacing: 12
-                    opacity: root.expanded ? 1 : 0
-                    visible: opacity > 0.01
-                    enabled: root.expanded
-                    Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
 
                     // workspaces
                     Row {
@@ -352,7 +360,7 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
                         spacing: 10
                         anchors.verticalCenter: parent.verticalCenter
                         Repeater {
-                            model: 5
+                            model: root.wsCount
                             delegate: Item {
                                 id: dot
                                 required property int index
@@ -408,7 +416,7 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         if (dItem.modelData.running)
-                                            Hyprland.dispatch('hl.dsp.exec_raw("focuswindow", "class:^(' + dItem.modelData.cls + ')$")')
+                                            Hyprland.dispatch('hl.dsp.focus({ window = "class:^(' + dItem.modelData.cls + ')$" })')
                                         else if (dItem.modelData.cmd)
                                             Quickshell.execDetached(["sh", "-c", dItem.modelData.cmd]) }
                                 }
@@ -512,12 +520,9 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
 
                 // right: media + tray + network + status + pin + power
                 Row {
+                    id: rightRow
                     anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
                     spacing: 10
-                    opacity: root.expanded ? 1 : 0
-                    visible: opacity > 0.01
-                    enabled: root.expanded
-                    Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
 
                     // now playing — icons only; hover for track details
                     Row {
@@ -747,6 +752,7 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
                     }
                 }
             }
+        }
         }
     }
 }

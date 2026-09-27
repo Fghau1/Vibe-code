@@ -47,7 +47,7 @@ choice=$(printf '%s\n' "${entries[@]}" \
 
 for i in "${!entries[@]}"; do
     if [[ ${entries[$i]} == "$choice" ]]; then
-        hyprctl dispatch focuswindow "address:${addrs[$i]}" >/dev/null
+        hyprctl dispatch "hl.dsp.focus({ window = \"address:${addrs[$i]}\" })" >/dev/null
         exit
     fi
 done
