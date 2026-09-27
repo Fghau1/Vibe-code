@@ -48,7 +48,7 @@ ShellRoot {
 
     // ── dock ──
     readonly property var pinned: [
-        { cls: "Alacritty",           icon: "Alacritty",           cmd: "alacritty" },
+        { cls: "com.mitchellh.ghostty", icon: "com.mitchellh.ghostty", cmd: "ghostty" },
         { cls: "app.zen_browser.zen", icon: "app.zen_browser.zen", cmd: "flatpak run app.zen_browser.zen" },
         { cls: "firefox",             icon: "firefox",             cmd: "firefox" },
         { cls: "org.gnome.Nautilus",  icon: "org.gnome.Nautilus",  cmd: "nautilus" },
@@ -99,6 +99,48 @@ ShellRoot {
         const list = Mpris.players.values
         for (const p of list) if (p.isPlaying) return p
         return list.length > 0 ? list[0] : null
+    }
+
+    // ── cava (audio visualizer, runs only while media is playing) ──
+    property var cavaLevels: []
+    readonly property bool cavaActive: activePlayer !== null && activePlayer.isPlaying
+    Process {
+        id: cavaProc
+        running: root.cavaActive
+        command: ["cava", "-p", Quickshell.env("HOME") + "/.config/quickshell/cava.conf"]
+        stdout: SplitParser {
+            onRead: data => root.cavaLevels = data.split(";").filter(v => v !== "").map(v => parseInt(v) / 100)
+        }
+        onRunningChanged: if (!running) root.cavaLevels = []
+    }
+
+    // ── cat (waycat) ──
+    FontLoader { id: catFont; source: Qt.resolvedUrl("fonts/Waycat.ttf") }
+    property real cpuUse: 0
+    property int catIdle: 0
+    property int catStep: 0
+    property var cpuPrev: null
+    readonly property bool catAsleep: catIdle >= 4
+    readonly property string catFrame: catAsleep ? "GHIJKLMN"[catStep % 8] : "ABCDE"[catStep % 5]
+    Process {
+        id: cpuGet
+        command: ["sh", "-c", "head -1 /proc/stat"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const f = text.trim().split(/\s+/).slice(1).map(Number)
+                const active = f[0] + f[1] + f[2], total = active + f[3]
+                if (root.cpuPrev && total > root.cpuPrev.total)
+                    root.cpuUse = (active - root.cpuPrev.active) / (total - root.cpuPrev.total)
+                root.cpuPrev = { active: active, total: total }
+                root.catIdle = root.cpuUse < 0.02 ? root.catIdle + 1 : 0
+            }
+        }
+    }
+    Timer { interval: 1000; running: true; repeat: true; triggeredOnStart: true; onTriggered: cpuGet.running = true }
+    Timer {
+        interval: Math.max(50, Math.round((0.22 - root.cpuUse * 0.10) * 1000))
+        running: true; repeat: true
+        onTriggered: root.catStep++
     }
 
     // ── network ──
@@ -303,7 +345,7 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
                 // so nothing ever overlaps; clamped to the screen so it can't run off-edge.
                 readonly property real leftContentWidth: menuBtn.width + 8 + 8 + leftRow.implicitWidth
                 readonly property real rightContentWidth: rightRow.implicitWidth + 14 + 14
-                readonly property real neededWidth: 2 * Math.max(leftContentWidth, rightContentWidth) + clockItem.width + 8
+                readonly property real neededWidth: 2 * (Math.max(leftContentWidth, rightContentWidth) + 56) + clockItem.width + 8
                 readonly property real minWidth: 1300
                 implicitWidth: Math.min(screenScope.modelData.width - 40, Math.max(minWidth, neededWidth))
                 Behavior on implicitWidth { NumberAnimation { duration: 320; easing.type: Easing.OutExpo } }
@@ -516,6 +558,40 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
                             }
                         }
                     }
+                }
+
+                // cava visualizer, left of the clock
+                Row {
+                    id: cavaRow
+                    anchors { right: clockItem.left; rightMargin: 4; verticalCenter: parent.verticalCenter }
+                    layoutDirection: Qt.RightToLeft
+                    height: 16
+                    spacing: 2
+                    opacity: root.cavaActive ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: 250 } }
+                    Repeater {
+                        model: 10
+                        Rectangle {
+                            required property int index
+                            width: 2
+                            radius: 1
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: root.fg
+                            height: Math.max(2, (root.cavaLevels[index] || 0) * cavaRow.height)
+                            Behavior on height { NumberAnimation { duration: 60 } }
+                        }
+                    }
+                }
+
+                // animated cat (waycat), right of the clock: runs faster with CPU load, sleeps when idle
+                Text {
+                    id: catTxt
+                    anchors { left: clockItem.right; leftMargin: 4; verticalCenter: parent.verticalCenter }
+                    font.family: catFont.name
+                    font.pixelSize: 20
+                    font.bold: true
+                    color: root.fg
+                    text: root.catFrame
                 }
 
                 // right: media + tray + network + status + pin + power

@@ -1,0 +1,46 @@
+# Adwaita darker — ported from alacritty/alacritty.toml to keep the same look
+# after switching the default terminal from Alacritty to Ghostty.
+
+class = com.mitchellh.ghostty
+
+background-opacity = 0.7
+window-padding-x = 10
+window-padding-y = 10
+window-decoration = false
+
+font-family = JetBrains Mono
+font-family-bold = JetBrains Mono
+font-family-italic = JetBrains Mono
+font-family-bold-italic = JetBrains Mono
+font-size = 11
+
+cursor-style = block
+cursor-style-blink = false
+
+command = fish
+
+background = #000000
+foreground = #deddda
+
+cursor-color = #deddda
+cursor-text = #000000
+
+selection-background = #1c1c1c
+selection-foreground = #c0bfbc
+
+palette = 0=#000000
+palette = 1=#ed333b
+palette = 2=#57e389
+palette = 3=#ff7800
+palette = 4=#62a0ea
+palette = 5=#9141ac
+palette = 6=#5bc8af
+palette = 7=#deddda
+palette = 8=#9a9996
+palette = 9=#f66151
+palette = 10=#8ff0a4
+palette = 11=#ffa348
+palette = 12=#99c1f1
+palette = 13=#dc8add
+palette = 14=#93ddc2
+palette = 15=#f6f5f4

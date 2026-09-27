@@ -71,6 +71,8 @@ NOT installed by this script (no Debian/Ubuntu package - build from source):
   - awww (the animated wallpaper daemon used by scripts/wallpaper.sh) - if you
     have your own fork/build, put its "awww"/"awww-daemon" binaries on PATH.
     Alternative: "swww" (build from source), adjusting scripts/wallpaper.sh.
+  - ghostty (the default terminal) - not in Debian/Ubuntu stable repos yet;
+    grab a .deb from https://ghostty.org/download or build from source.
 
 Done. Next steps:
   1. Build/install the pieces listed above, then log into a Hyprland session.

@@ -11,7 +11,7 @@ sudo dnf copr enable -y solopasha/hyprland
 echo "==> Updating and installing packages"
 sudo dnf install -y \
     hyprland hyprlock hypridle hyprpolkitagent xdg-desktop-portal-hyprland \
-    kitty alacritty rofi dunst fastfetch fish eza bat fzf \
+    kitty alacritty ghostty rofi dunst fastfetch fish eza bat fzf \
     nautilus firefox \
     NetworkManager NetworkManager-wifi network-manager-applet \
     bluez bluez-tools blueman \

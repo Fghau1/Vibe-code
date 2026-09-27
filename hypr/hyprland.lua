@@ -72,8 +72,8 @@ hl.window_rule({ match = { initial_title = "^(Picture-in-Picture|Picture in pict
 hl.window_rule({ match = { initial_title = "^scratchpad$" }, float = true, center = true,
                  workspace = "special:scratchpad silent", size = { 1000, 650 } })
 
--- alacritty: alacritty.toml sets the focused opacity; unfocused is dimmed by 0.7 on top
-hl.window_rule({ match = { class = "Alacritty" }, opacity = "1.0 override 0.7 override 1.0 override" })
+-- ghostty: ghostty/config sets the focused opacity; unfocused is dimmed by 0.7 on top
+hl.window_rule({ match = { class = "com.mitchellh.ghostty" }, opacity = "1.0 override 0.7 override 1.0 override" })
 
 -- binds ---------------------------------------------------------
 local function run(keys, cmd, desc, opts)
@@ -85,7 +85,7 @@ local function act(keys, d, desc, opts)
     hl.bind(keys, d, opts)
 end
 
-run("SUPER + RETURN", "alacritty",     "Terminal")
+run("SUPER + RETURN", "ghostty",       "Terminal")
 run("SUPER + D",      "rofi -show drun", "Launcher")
 run("SUPER + E",      "nautilus",      "File manager")
 run("SUPER + B",      "firefox",       "Browser")
@@ -112,7 +112,7 @@ act("SUPER + mouse_down", hl.dsp.focus({ workspace = "e+1" }), "Next workspace")
 act("SUPER + mouse_up",   hl.dsp.focus({ workspace = "e-1" }), "Previous workspace")
 
 act("SUPER + S", hl.dsp.workspace.toggle_special("scratchpad"), "Scratchpad")
-run("SUPER + CTRL + S", "alacritty --title scratchpad", "Scratchpad terminal")
+run("SUPER + CTRL + S", "ghostty --title=scratchpad", "Scratchpad terminal")
 
 act("SUPER + mouse:272", hl.dsp.window.drag(),   "Drag window",   { mouse = true })
 act("SUPER + mouse:273", hl.dsp.window.resize(), "Resize window", { mouse = true })
