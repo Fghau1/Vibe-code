@@ -312,7 +312,7 @@ done`]
                     spacing: 8
                     SmallBtn { label: "redes…";     onClicked: { Quickshell.execDetached(["nm-connection-editor"]); Qt.quit() } }
                     SmallBtn { label: "áudio…";     onClicked: { Quickshell.execDetached(["pavucontrol"]); Qt.quit() } }
-                    SmallBtn { label: "bluetooth…"; onClicked: { Quickshell.execDetached(["sh", "-c", "command -v blueman-manager >/dev/null && exec blueman-manager || exec kitty -e bluetoothctl"]); Qt.quit() } }
+                    SmallBtn { label: "bluetooth…"; onClicked: { Quickshell.execDetached(["sh", "-c", "command -v blueman-manager >/dev/null && exec blueman-manager || exec alacritty -e bluetoothctl"]); Qt.quit() } }
                 }
             }
         }

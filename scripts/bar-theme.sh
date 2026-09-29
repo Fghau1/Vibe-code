@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Switch the quickshell bar's color theme (SUPER + M -> Bar theme).
-# Writes the theme name to a state file that shell.qml watches and applies live.
+# Writes the theme name to a state file (read by shell.qml at startup) and applies it live over IPC.
 THEME="$(dirname "$(readlink -f "$0")")/../rofi/10hour.rasi"
 STATE="$HOME/.local/state/quickshell/bar-theme"
 mkdir -p "$(dirname "$STATE")"
@@ -23,4 +23,5 @@ case "$choice" in
 esac
 
 echo -n "$name" > "$STATE"
+qs ipc call bartheme set "$name" >/dev/null 2>&1
 notify-send -a osd -t 1500 "󰸌  Bar theme" "$name"

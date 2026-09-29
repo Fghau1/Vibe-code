@@ -36,7 +36,7 @@ style = "Bold Italic"
 style = { shape = "Block", blinking = "Off" }
 
 [terminal]
-shell = { program = "fish" }
+shell = { program = "zsh" }
 
 [colors.primary]
 background = "#000000"

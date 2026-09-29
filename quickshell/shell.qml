@@ -15,26 +15,33 @@ ShellRoot {
     property color dim: "#555555"
     property color barBg: "#000000"
     property color barBorder: "#333333"
+    property color barTrack: "#222222"
     readonly property string font: "JetBrainsMono Nerd Font"
 
     // ── bar color themes ──
     readonly property var barThemes: ({
-        "default":    { fg: "#ffffff", dim: "#555555", bg: "#000000", border: "#333333" },
-        "gruvbox":    { fg: "#ebdbb2", dim: "#a89984", bg: "#282828", border: "#504945" },
-        "retro":      { fg: "#39ff14", dim: "#5f5f7a", bg: "#0a0a12", border: "#00e5ff" },
-        "everforest": { fg: "#d3c6aa", dim: "#7a8478", bg: "#2b3339", border: "#4a555b" },
-        "nostalgic":  { fg: "#e8d5b5", dim: "#8a6d4a", bg: "#2b1d14", border: "#5a4632" }
+        "default":    { fg: "#ffffff", dim: "#555555", bg: "#000000", border: "#333333", track: "#222222" },
+        "gruvbox":    { fg: "#ebdbb2", dim: "#a89984", bg: "#282828", border: "#504945", track: "#3c3836" },
+        "retro":      { fg: "#39ff14", dim: "#5f5f7a", bg: "#0a0a12", border: "#00e5ff", track: "#1c1c2e" },
+        "everforest": { fg: "#d3c6aa", dim: "#7a8478", bg: "#2b3339", border: "#4a555b", track: "#374247" },
+        "nostalgic":  { fg: "#e8d5b5", dim: "#8a6d4a", bg: "#2b1d14", border: "#5a4632", track: "#3d2a1d" }
     })
     function applyBarTheme(name) {
         const t = root.barThemes[name] || root.barThemes["default"]
-        root.fg = t.fg; root.dim = t.dim; root.barBg = t.bg; root.barBorder = t.border
+        root.fg = t.fg; root.dim = t.dim; root.barBg = t.bg; root.barBorder = t.border; root.barTrack = t.track
+    }
+    // the state file may not exist when quickshell starts (so it can't be watched);
+    // bar-theme.sh also pushes the change live through this IPC target
+    IpcHandler {
+        target: "bartheme"
+        function set(name: string): void { root.applyBarTheme(name) }
     }
     FileView {
         id: barThemeFile
         path: Quickshell.env("HOME") + "/.local/state/quickshell/bar-theme"
         watchChanges: true
         onFileChanged: reload()
-        onLoaded: root.applyBarTheme(text().trim())
+        onLoaded: { const n = text().trim(); if (n) root.applyBarTheme(n) }
         onLoadFailed: root.applyBarTheme("default")
     }
 
@@ -48,8 +55,8 @@ ShellRoot {
 
     // ── dock ──
     readonly property var pinned: [
-        { cls: "com.mitchellh.ghostty", icon: "com.mitchellh.ghostty", cmd: "ghostty" },
-        { cls: "app.zen_browser.zen", icon: "app.zen_browser.zen", cmd: "flatpak run app.zen_browser.zen" },
+        { cls: "Alacritty",           icon: "Alacritty",           cmd: "alacritty" },
+        { cls: "zen",                 icon: "zen-browser",         cmd: "zen-browser" },
         { cls: "firefox",             icon: "firefox",             cmd: "firefox" },
         { cls: "org.gnome.Nautilus",  icon: "org.gnome.Nautilus",  cmd: "nautilus" },
         { cls: "discord",             icon: "discord",             cmd: "discord" },
@@ -271,7 +278,7 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
                     id: track
                     anchors { fill: parent; margins: 8 }
                     radius: 6
-                    color: "#222222"
+                    color: root.barTrack
                     readonly property string icon: root.osdKind === "brightness" ? "" : (root.osdMuted || root.osdValue === 0 ? "" : (root.osdValue < 50 ? "" : ""))
                     Txt {
                         anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
@@ -291,7 +298,7 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
                             anchors.verticalCenter: parent.verticalCenter
                             text: track.icon
                             font.pixelSize: 16
-                            color: "#000000"
+                            color: root.barBg
                         }
                     }
                 }
@@ -550,7 +557,7 @@ echo "S $(nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '$1=="yes"{pr
                                                 anchors.centerIn: parent
                                                 visible: cell.valid
                                                 text: cell.day
-                                                color: cell.isToday ? "#000000" : root.fg
+                                                color: cell.isToday ? root.barBg : root.fg
                                             }
                                         }
                                     }

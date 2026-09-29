@@ -16,12 +16,21 @@ set_wp() {
         pkill -x awww-daemon 2>/dev/null
         echo "$1" > "$STATE"
         mpvpaper -f -p -o "no-audio loop-playlist" ALL "$1" >/dev/null 2>&1
-    else
+    elif command -v awww >/dev/null; then
         pkill -x mpvpaper 2>/dev/null
+        pkill -x hyprpaper 2>/dev/null
         daemon
         echo "$1" > "$STATE"
         awww img "$1" --transition-type "${TRANS[RANDOM % ${#TRANS[@]}]}" \
             --transition-duration 1.2 --transition-fps 144 --transition-step 60
+    else
+        # fallback: hyprpaper (no transitions)
+        pkill -x mpvpaper 2>/dev/null
+        pgrep -x hyprpaper >/dev/null || { setsid hyprpaper >/dev/null 2>&1 & sleep 0.6; }
+        echo "$1" > "$STATE"
+        for m in $(hyprctl monitors | awk '/^Monitor/{print $2}'); do
+            hyprctl hyprpaper wallpaper "$m,$1" >/dev/null
+        done
     fi
 }
 

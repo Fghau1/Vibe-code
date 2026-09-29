@@ -37,7 +37,7 @@ done < <(pgrep -f "(^|/)($AGENTS)( |\$)" 2>/dev/null)
 if [[ ${#entries[@]} -eq 0 ]]; then
     c=$(printf '%s\n' "Nenhum agente em execução" "󰐊  Lançar Claude Code" \
         | rofi -dmenu -i -theme "$THEME" -theme-str 'window {width: 340px;}' -p "󰚩") || exit
-    [[ $c == *"Lançar"* ]] && exec kitty --title scratchpad claude
+    [[ $c == *"Lançar"* ]] && exec alacritty --title scratchpad -e claude
     exit
 fi
 

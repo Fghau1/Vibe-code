@@ -2,7 +2,7 @@
 * {
     background-color: transparent;
     text-color: #6C6C6D;
-    font: "JetBrains Mono 11";
+    font: "JetBrainsMono Nerd Font 11";
     margin: 0px;
     padding: 0px;
     spacing: 0px;
